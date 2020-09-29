@@ -5,6 +5,8 @@ Framework for wrapping
 import jp_proxy_widget
 from IPython.display import display
 
+from jupyter_ui_poll import run_ui_poll_loop
+
 
 def load_requirements(widget=None, silent=True, additional=()):
     """
@@ -34,6 +36,7 @@ class ML5Class(jp_proxy_widget.JSProxyWidget):
         self.options = options
         self.classify_callback_list = []
         self.predict_callback_list = []
+        self.training_in_progress = False
 
     def default_options(self):
         return {
@@ -81,6 +84,7 @@ class ML5Class(jp_proxy_widget.JSProxyWidget):
         """)
 
     def train_data(self, trainingOptions=None):
+        self.training_in_progress = True
         self.js_init("""
             function whileTraining(epoch, loss) {
                 console.log(epoch);
@@ -96,7 +100,17 @@ class ML5Class(jp_proxy_widget.JSProxyWidget):
 
     def done_callback(self):
         ##
+        self.training_in_progress = False
         print("done!")
+
+    def training_is_done(self):
+        if self.training_in_progress:
+            return None
+        else:
+            return True
+
+    def await_training_complete(self):
+        run_ui_poll_loop(self.training_is_done)
 
     def classify_data(self, input, callback=None):
         if callback is None:
