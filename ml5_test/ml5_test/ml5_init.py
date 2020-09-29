@@ -113,6 +113,7 @@ class ML5Class(jp_proxy_widget.JSProxyWidget):
         run_ui_poll_loop(self.training_is_done)
 
     def classify_data(self, input, callback=None):
+        self.training_in_progress = True
         if callback is None:
             callback = self.classify_callback
         self.js_init("""
@@ -127,8 +128,10 @@ class ML5Class(jp_proxy_widget.JSProxyWidget):
             element.nn_info.network.classify(input, handleResults);
 
         """, input=input, callback=callback)
+        self.await_training_complete()
     
     def classify_callback(self, info):
+        self.training_in_progress = False
         self.classify_callback_list.append(info)
 
 
